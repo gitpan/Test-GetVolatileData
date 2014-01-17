@@ -11,7 +11,7 @@ require Exporter;
 our @ISA = qw(Exporter);
 our @EXPORT = qw(get_data);
 
-our $VERSION = '1.0101';
+our $VERSION = '1.0102';
 
 our $ERROR;
 
@@ -70,7 +70,7 @@ Test::GetVolatileData - load frequently-changed data in your tests without uploa
     use warnings FATAL => 'all';
     use Test::More;
     use Test::GetVolatileData;
-    plan tests => 9;
+    plan tests => 2;
 
     ### That .txt file contains data, like:
     ### apikey1foobarbaz
@@ -78,6 +78,7 @@ Test::GetVolatileData - load frequently-changed data in your tests without uploa
     ### etc.
 
     SKIP: {
+        # get a single data line; randomly chosen
         my $key = get_data('http://zoffix.com/CPAN/Test-GetVolatileData.txt')
             or skip "Failed to fetch API key; error is: $Test::GetVolatileData::ERROR", 2;
 
@@ -86,6 +87,19 @@ Test::GetVolatileData - load frequently-changed data in your tests without uploa
         my $module = My::Module::New->( apikey => $key );
         ok( $module->get_stuff, 'Got stuff!' );
     }
+
+    # get three data lines; randomly chosen
+    my @moar_keys = get_data('http://zoffix.com/CPAN/Test-GetVolatileData.txt',
+        num => 3,
+    );
+
+    unless ( @moar_keys ) {
+        diag "Error getting fresh keys: $Test::GetVolatileData::ERROR";
+        diag "Falling back on old ones";
+        @keys = qw/The Old Keys/;
+    }
+
+    ... # do the rest of testing with @moar_keys data here
 
 =head1 DESCRIPTION
 
@@ -112,13 +126,22 @@ Exports C<get_data> by default:
     my @keys = get_data(
         'http://zoffix.com/CPAN/Test-GetVolatileData.txt',
         num => 42,
-    ) or skip 'Error getting keys: ' . $Test::GetVolatileData::ERROR, 42;
+    );
+
+    unless ( @keys ) {
+        diag "Error getting keys: $Test::GetVolatileData::ERROR";
+        diag "Falling back on old keys";
+        @keys = qw/Old Keys That Came With The Distro/;
+    }
 
 B<Takes> a B<mandatory> URL to the data document and any number of
-optional arguments in a key/value format. The referenced document
-must have each entry separated by a new line. If the referenced
-document contains several such lines, the line returned will be random
-(using C<rand()>).
+B<optional> arguments in a key/value format. The referenced document
+must have each entry separated by a new line (take a look at
+L<this example|http://zoffix.com/CPAN/WWW-Purolator-TrackingInfo.txt>
+and L<this one|http://zoffix.com/CPAN/Test-GetVolatileData.txt>.
+If the referenced
+document contains several such lines, the line to be returned will be
+selected randomly.
 
 B<On failure> returns C<undef> or an empty list, depending
 on the context, and the human-readable reason for failure will be
@@ -135,10 +158,11 @@ Possible optional arguments are as follows:
     );
 
 B<Takes> a positive interger as a value.
-Specifies the I<[maximum]> number of results to return. If the
+Tells C<get_data()> to get more than one line, and
+the value specifies the maximum number of results to return. If the
 data document has fewer than C<num> entries, then all the
 available entries will be B<returned> as a list. Otherwise,
-a C<num> number of random entries will be returned.
+a C<num> number of randomly-selected entries will be returned.
 
 =head1 AUTHOR
 

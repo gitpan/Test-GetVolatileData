@@ -16,7 +16,7 @@ name: Test-GetVolatileData
 provides:
   Test::GetVolatileData:
     file: lib/Test/GetVolatileData.pm
-    version: 1.0101
+    version: 1.0102
 requires:
   Carp: 1.26
   Exporter: 5.64_03
@@ -24,4 +24,4 @@ requires:
   perl: 5.006
 resources:
   license: http://www.perlfoundation.org/artistic_license_2_0
-version: 1.0101
+version: 1.0102
